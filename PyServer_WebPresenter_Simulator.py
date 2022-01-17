@@ -138,8 +138,8 @@ MEM_STREAMSTATE["Action"]   = "Stop"
 MEM_STREAMSTATE["Duration"] = "DD:HH:MM:SS"
 MEM_STREAMSTATE["Bitrate"]  = "bps"
 
-MEM_SHUTDOWN = {}
-MEM_SHUTDOWN["Action"]   = "Reboot"
+SHUTDOWN = {}
+SHUTDOWN["Action"]   = "Reboot"
 MEM_SHUTDOWN = {}
 MEM_SHUTDOWN["Action"]   = "Reboot"
 
