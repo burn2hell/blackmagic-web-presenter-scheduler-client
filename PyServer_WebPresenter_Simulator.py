@@ -1,5 +1,8 @@
 # FIRST VERSION
 # 17/JAN/2022: Mimic Blackmagic Web Presentor ethernet output.
+# Basic idea works, ain't pretty.
+# Looking into function to create memory key/value.
+# Looking into 
 
 #!/usr/bin/env python3
 
@@ -149,6 +152,8 @@ def On_Connect():
     return sent
 
 def Search(Key, Data):
+    if Data is None:
+        Data = ""
     if int(Data.find(Key)) > -1:
         result = True
     else:
@@ -161,16 +166,6 @@ def Pos(Key, Data):
 def Transmit(Input):
     sent = bytes(Input+CR+LF, encoding="utf-8")
     conn.sendall(sent)
-
-def Recieve():
-    data = conn.recv(1024)
-    recv = data.decode('utf-8')
-    recv = recv.replace(ACK, '[ACK]')
-    recv = recv.replace(NAK, '[NAK]')
-    recv = recv.replace(LF, '[LF]')
-    recv = recv.replace(CR, '[CR]')
-    return recv
-
 
 def Recv():
     buffer_1 = ''
@@ -195,6 +190,8 @@ def Recv():
                 buffer_2 = buffer_2.replace('\n','[LF]')
         else:
             pass
+    if debug:
+        print('Received: ' + buffer_1 + buffer_2)
     return buffer_1 + buffer_2
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -207,7 +204,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         while True:
             stringdata = Recv()
             
-            if Search('IDENTITY:',stringdata): #Identity block
+            if Search('IDENTITY:',stringdata): #IDENTITY block
                 stringdata = Recv()
                 IDENTITY_BIT = False
                 while (stringdata != "[CR][LF]"):     
@@ -226,17 +223,192 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             Transmit(key + OUT + value)
                     Transmit(EMPTY)
                 else:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
                     Transmit('IDENTITY:')
                     for key, value in IDENTITY.items() :
                         Transmit(key + OUT + value)
                     Transmit(EMPTY)
 
-            if Search('VERSION:',stringdata): #Version block
-                stringdata = Recv() #'Key' or '[LF][CR]'
+            if Search('VERSION:',stringdata): #VERSION block
+                stringdata = Recv()
                 if stringdata == "[CR][LF]":
+                    Transmit(ACK)
+                    Transmit(EMPTY)
                     for key, value in VERSION.items() :
                         Transmit(key + OUT + value)
-                    Transmit("")
+                    Transmit(EMPTY)
 
+            if Search('NETWORK:',stringdata): #NETWORK block
+                stringdata = Recv()
+                NETWORK_BIT = False
+                while (stringdata != "[CR][LF]"):     
+                    for key, value in NETWORK.items():
+                        if Search(key, stringdata):
+                            NETWORK_BIT = True
+                            NETWORK[key] = stringdata[(len(key)+2):Pos('[',stringdata)]
+                    stringdata = Recv()
+                if NETWORK_BIT:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('NETWORK:')
+                    for key, value in NETWORK.items():
+                        if MEM_NETWORK[key] != NETWORK[key]:
+                            MEM_NETWORK[key] = NETWORK[key]
+                            Transmit(key + OUT + value)
+                    Transmit(EMPTY)
+                else:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('NETWORK:')
+                    for key, value in NETWORK.items() :
+                        Transmit(key + OUT + value)
+                    Transmit(EMPTY)
+                    
+            if Search('NETWORK INTERFACE 0:',stringdata): #NETWORK INTERFACE 0 block
+                stringdata = Recv()
+                NETWORKINTERFACE0_BIT = False
+                while (stringdata != "[CR][LF]"):     
+                    for key, value in NETWORKINTERFACE0.items():
+                        if Search(key, stringdata):
+                            NETWORKINTERFACE0_BIT = True
+                            NETWORKINTERFACE0[key] = stringdata[(len(key)+2):Pos('[',stringdata)]
+                    stringdata = Recv()
+                if NETWORKINTERFACE0_BIT:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('NETWORK INTERFACE 0:')
+                    for key, value in NETWORKINTERFACE0.items():
+                        if MEM_NETWORKINTERFACE0[key] != NETWORKINTERFACE0[key]:
+                            MEM_NETWORKINTERFACE0[key] = NETWORKINTERFACE0[key]
+                            Transmit(key + OUT + value)
+                    Transmit(EMPTY)
+                else:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('NETWORK INTERFACE 0:')
+                    for key, value in NETWORKINTERFACE0.items() :
+                        Transmit(key + OUT + value)
+                    Transmit(EMPTY)        
+
+
+            if Search('NETWORK INTERFACE 1:',stringdata): #NETWORK INTERFACE 1 block
+                stringdata = Recv()
+                NETWORKINTERFACE1_BIT = False
+                while (stringdata != "[CR][LF]"):     
+                    for key, value in NETWORKINTERFACE1.items():
+                        if Search(key, stringdata):
+                            NETWORKINTERFACE1_BIT = True
+                            NETWORKINTERFACE1[key] = stringdata[(len(key)+2):Pos('[',stringdata)]
+                    stringdata = Recv()
+                if NETWORKINTERFACE1_BIT:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('NETWORK INTERFACE 1:')
+                    for key, value in NETWORKINTERFACE1.items():
+                        if MEM_NETWORKINTERFACE1[key] != NETWORKINTERFACE1[key]:
+                            MEM_NETWORKINTERFACE1[key] = NETWORKINTERFACE1[key]
+                            Transmit(key + OUT + value)
+                    Transmit(EMPTY)
+                else:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('NETWORK INTERFACE 1:')
+                    for key, value in NETWORKINTERFACE1.items() :
+                        Transmit(key + OUT + value)
+                    Transmit(EMPTY)
+
+            if Search('UI SETTINGS:',stringdata): #UI SETTINGS block
+                stringdata = Recv()
+                UISETTINGS_BIT = False
+                while (stringdata != "[CR][LF]"):     
+                    for key, value in UISETTINGS.items():
+                        if Search(key, stringdata):
+                            UISETTINGS_BIT = True
+                            UISETTINGS[key] = stringdata[(len(key)+2):Pos('[',stringdata)]
+                    stringdata = Recv()
+                if UISETTINGS_BIT:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('UI SETTINGS:')
+                    for key, value in UISETTINGS.items():
+                        if MEM_UISETTINGS[key] != UISETTINGS[key]:
+                            MEM_UISETTINGS[key] = UISETTINGS[key]
+                            Transmit(key + OUT + value)
+                    Transmit(EMPTY)
+                else:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('UI SETTINGS:')
+                    for key, value in UISETTINGS.items() :
+                        Transmit(key + OUT + value)
+                    Transmit(EMPTY)
+
+            if Search('STREAM SETTINGS:',stringdata): #STREAM SETTINGS block
+                stringdata = Recv()
+                STREAMSETTINGS_BIT = False
+                while (stringdata != "[CR][LF]"):     
+                    for key, value in STREAMSETTINGS.items():
+                        if Search(key, stringdata):
+                            STREAMSETTINGS_BIT = True
+                            STREAMSETTINGS[key] = stringdata[(len(key)+2):Pos('[',stringdata)]
+                    stringdata = Recv()
+                if STREAMSETTINGS_BIT:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('STREAM SETTINGS:')
+                    for key, value in STREAMSETTINGS.items():
+                        if MEM_STREAMSETTINGS[key] != STREAMSETTINGS[key]:
+                            MEM_STREAMSETTINGS[key] = STREAMSETTINGS[key]
+                            Transmit(key + OUT + value)
+                    Transmit(EMPTY)
+                else:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('STREAM SETTINGS:')
+                    for key, value in STREAMSETTINGS.items() :
+                        Transmit(key + OUT + value)
+                    Transmit(EMPTY)
+
+            if Search('STREAM STATE:',stringdata): #STREAM SETTINGS block
+                stringdata = Recv()
+                STREAMSTATE_BIT = False
+                while (stringdata != "[CR][LF]"):     
+                    for key, value in STREAMSTATE.items():
+                        if Search(key, stringdata):
+                            STREAMSTATE = True
+                            STREAMSTATE[key] = stringdata[(len(key)+2):Pos('[',stringdata)]
+                    stringdata = Recv()
+                if STREAMSTATE_BIT:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('STREAM STATE:')
+                    for key, value in STREAMSTATE.items():
+                        if MEM_STREAMSTATE[key] != STREAMSTATE[key]:
+                            MEM_STREAMSTATE[key] = STREAMSTATE[key]
+                            Transmit(key + OUT + value)
+                    Transmit(EMPTY)
+                else:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+                    Transmit('STREAM STATE:')
+                    for key, value in STREAMSTATE.items() :
+                        Transmit(key + OUT + value)
+                    Transmit(EMPTY)
+
+            if Search('SHUTDOWN:',stringdata): #SHUTDOWN block
+                stringdata = Recv()
+                SHUTDOWN_BIT = False
+                while (stringdata != "[CR][LF]"):     
+                    for key, value in SHUTDOWN.items():
+                        if Search(key, stringdata):
+                            SHUTDOWN_BIT = True
+                            SHUTDOWN[key] = stringdata[(len(key)+2):Pos('[',stringdata)]
+                    stringdata = Recv()
+                if SHUTDOWN_BIT:
+                    Transmit(ACK)
+                    Transmit(EMPTY)
+            
+            
             if not stringdata:
                 break
