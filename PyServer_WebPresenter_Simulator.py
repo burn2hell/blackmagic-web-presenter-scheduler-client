@@ -2,7 +2,7 @@
 # 17/JAN/2022: Mimic Blackmagic Web Presentor ethernet output.
 # Basic idea works, ain't pretty.
 # Looking into function to create memory key/value.
-# Looking into 
+# Looking into replacing copy work and change it into function.
 
 #!/usr/bin/env python3
 
