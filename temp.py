@@ -92,6 +92,8 @@ CONFIGURATION = {
         }
     }
 
+M_CONFIGURATION = {}
+
 def On_Connect():
     LINES = "PROTOCOL PREAMBLE:" +CR+LF+ "Version: 1.0" +CR+LF+ "END PRELUDE:" +CR+LF+CR+LF
     sent = bytes(LINES, encoding="utf-8")
@@ -151,14 +153,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             stringdata = Recv()
 
             TEMP = None
+            COPY = None
             CHANGE = False
-            for k, v in CONFIGURATION.items():
-                if Search(k, stringdata):
-                    NAME = k
-                    TEMP = v
+            for k1, v1 in CONFIGURATION.items():
+                if Search(k1, stringdata):
+                    NAME = k1
+                    TEMP = v1
+                    COPY = M_CONFIGURATION.get(k1)
             while (stringdata != "[CR][LF]"):
-                for k, v in TEMP.items():
-                    if Search(k, stringdata):
+                for k2, v2 in TEMP.items():
+                    if Search(k2, stringdata):
                         CHANGE = True
                         #How to find the correct location
                 stringdata = Recv()
@@ -167,11 +171,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     Transmit(ACK)
                     Transmit(EMPTY)
                     Transmit(NAME)
-                    #Print the ones that changed
+                    for k3, v3 in TEMP.items():
+                        if COPY[k3] != TEMP[k3]:
+                            COPY[k3] = TEMP[k3]
+                            Transmit(k3 + OUT + v3)
+                    Transmit(EMPTY)
                 else:
                     Transmit(ACK)
                     Transmit(EMPTY)
                     Transmit(NAME)
-                    for k, v in TEMP.items():
-                        Transmit(k + OUT + v)
+                    for k4, v4 in TEMP.items():
+                        Transmit(k4 + OUT + v4)
                     Transmit(EMPTY)
