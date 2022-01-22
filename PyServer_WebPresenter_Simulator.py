@@ -1,5 +1,5 @@
 # SECOND VERSION
-# 20/JAN/2022: Mimic Blackmagic Web Presentor ethernet output.
+# 22/JAN/2022: Mimic Blackmagic Web Presentor ethernet output.
 
 #!/usr/bin/env python3
 
@@ -9,21 +9,12 @@ import copy
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 9977        # default port Web Presenter
 
-debug = 1
-if debug:
-    ACK = "[ACK]"
-    NAK = "[NAK]"
-else:
-    ACK = "\6"
-    NAK = "\21"
-    
+ACK = "\6"
+NAK = "\21"  
 LF  = "\n"
 CR  = "\r"  
 OUT = ": "
-ACCEPT = ACK + LF + CR
-DECLINE = NAK + LF + CR
 EMPTY = ""
-
 
 CONFIGURATION = {
     "IDENTITY:" : {
@@ -115,26 +106,14 @@ def Transmit(Input):
     sent = bytes(Input+CR+LF, encoding="utf-8")
     conn.sendall(sent)
 
-def Recv(): #Make it buffer until "\r\n"
-    buffer_1 = ''
-    buffer_2 = ''
-    buffer_1 = conn.recv(1024)
-    if not buffer_1:
-        return
-    buffer_1 = buffer_1.decode('utf-8')
-    if Search('\r', buffer_1): 
-        buffer_1 = buffer_1.replace(ACK, '[ACK]') #Remove
-        buffer_1 = buffer_1.replace(NAK, '[NAK]') #Remove
-    else:
-        buffer_2 = conn.recv(1024)
-        if buffer_2:
-            buffer_2 = buffer_2.decode('utf-8')
-            if Search('\r', buffer_2): 
-                buffer_2 = buffer_2.replace(ACK, '[ACK]') #Remove
-                buffer_2 = buffer_2.replace(NAK, '[NAK]') #Remove
-        else:
-            pass
-    return buffer_1 + buffer_2
+def Recv():
+    byte_in = ''
+    str_out = ''
+    while not(Search('\n', str_out)):
+        byte_in = conn.recv(1024)
+        if byte_in:
+            str_out = str_out + byte_in.decode('utf-8')
+    return str_out
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
