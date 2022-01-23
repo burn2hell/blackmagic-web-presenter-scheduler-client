@@ -2,7 +2,7 @@
 
 Scheduler Client for Blackmagic Web Presenter.  
 - A Python Client that makes use of Blackmagic Web Presenter Ethernet Protocol.  
-- A Python Server that simulates the output of Blackmagic Web Presenter.  
+- A Python Server that simulates the ethernet protocol of Blackmagic Web Presenter.  
 
 
 Blackmagic Web Presenter: https://www.blackmagicdesign.com/nl/products/blackmagicwebpresenter  
